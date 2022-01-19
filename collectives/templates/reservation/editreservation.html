@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 
 {% block additionalhead %}
+  {# Tabulator: for tables#}
+  <script type="text/javascript" src="https://unpkg.com/tabulator-tables@4.9.3/dist/js/tabulator.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment-with-locales.min.js"></script>
+
   {# DateTime picker#}
   <script src="{{ url_for('static', filename='js/tail.datetime-full.min.js') }}"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tail.datetime-harx-light.min.css')}}">
@@ -31,10 +35,21 @@
         {{ form.collect_date.label }} : {{ form.collect_date(type="datetime") }}
       </div>
     </div>
-    <div class="controls">
-      {{ form.submit(class="button button-primary") }}
-    </div>
   </div>
+
+  <h4>Ajouter un équipement</h4>
+  <div id="equipment-type-table"></div>
+  <script>
+    const token_csrf = "{{ csrf_token() }}";
+    const icon_add_column = "{{ url_for('static', filename='img/icon/ionicon/md-add-circle-outline.svg') }}";
+    var ajaxURL = "{{url_for('api.equipmentTypes')}}";
+  </script>
+  <script src="{{ url_for('static', filename='js/equipment/tabulator_equipment_types_add.js') }}"></script>
+
+  <div class="controls">
+    {{ form.submit(class="button button-primary") }}
+  </div>
+
 </div>
 <script>
   document.querySelectorAll("input[type=datetime]").forEach(function(input){

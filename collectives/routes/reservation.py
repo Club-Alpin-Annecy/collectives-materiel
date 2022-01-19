@@ -12,7 +12,7 @@ from collectives.models.equipment import Equipment
 from ..models import db
 from ..models import Event, RoleIds
 from ..models.reservation import Reservation, ReservationLine
-from ..forms.reservation import LeaderReservationForm
+from ..forms.reservation import LeaderReservationForm, ReservationItemForm
 
 blueprint = Blueprint("reservation", __name__, url_prefix="/reservation")
 """ Reservation blueprint
@@ -87,7 +87,7 @@ def manage_reservation(reservation_id=None):
     )
 
 
-@blueprint.route("/<int:event_id>/<int:role_id>/register", methods=["GET"])
+@blueprint.route("event/<int:event_id>/role/<int:role_id>/register", methods=["GET"])
 def register(event_id=None, role_id=None):
     """Page for user to create a new reservation.
 
@@ -111,12 +111,16 @@ def register(event_id=None, role_id=None):
         flash("Role not implemented yet")
         return redirect(url_for("event.view_event", event_id=event_id))
 
-    event = Reservation() if event_id is None else Event.query.get(event_id)
+    event = Event() if event_id is None else Event.query.get(event_id)
     form = LeaderReservationForm()
+    add_line_form = ReservationItemForm()
 
     if not form.validate_on_submit():
         return render_template(
-            "reservation/editreservation.html", form=form, event=event
+            "reservation/editreservation.html",
+            event=event,
+            form=form,
+            add_line_form=add_line_form,
         )
 
     return redirect(url_for("reservation.view_reservations"))
