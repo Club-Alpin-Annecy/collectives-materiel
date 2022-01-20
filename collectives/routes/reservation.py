@@ -87,7 +87,7 @@ def manage_reservation(reservation_id=None):
     )
 
 
-@blueprint.route("event/<int:event_id>/role/<int:role_id>/register", methods=["GET"])
+@blueprint.route("event/<int:event_id>/role/<int:role_id>/register", methods=["GET","POST"])
 def register(event_id=None, role_id=None):
     """Page for user to create a new reservation.
 

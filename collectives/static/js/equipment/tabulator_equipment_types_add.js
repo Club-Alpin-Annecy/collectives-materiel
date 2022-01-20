@@ -5,6 +5,13 @@ function actionFormatter(cell, formatterParams, onRendered){
 function onclickTriggerInsideForm(e, cell){
   cell._cell.element.querySelector('form').submit();
 }
+
+function cellInTable(tab, value){
+  for(row of tab.getData()) {
+    if(row.id == value) { console.log("true"); return true }
+  }
+  return false;
+}
 //initialize table
 let table = new Tabulator("#equipment-type-table", {
       ajaxURL:ajaxURL,
@@ -34,9 +41,12 @@ let table = new Tabulator("#equipment-type-table", {
         {title:"Ajouter au panier", headerSort:false,
           formatter : actionFormatter, formatterParams:{'icon': 'add-circle-outline', 'method': 'POST', 'alt': 'Ajouter'},
           cellClick : function(e,cell) {
-            let qty = cell.getRow().getData().quantity;
-            if(qty < 1 || !qty) table.updateRow(cell.getRow().getIndex(), {quantity:"1"});
-            table_taken.addData(cell.getRow().getData());
+            let row = cell.getRow();
+            let qty = row.getData().quantity;
+            if(!cellInTable(table_taken, row.getData().id)) {
+              if(qty < 1 || !qty) table.updateRow(row.getIndex(), {quantity:1});
+              table_taken.addData(row.getData());
+            }
           }
         }
       ],
