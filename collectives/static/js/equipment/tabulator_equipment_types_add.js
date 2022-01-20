@@ -34,7 +34,6 @@ let table = new Tabulator("#equipment-type-table", {
         {title:"Ajouter au panier", headerSort:false,
           formatter : actionFormatter, formatterParams:{'icon': 'add-circle-outline', 'method': 'POST', 'alt': 'Ajouter'},
           cellClick : function(e,cell) {
-            console.log(cell.getRow())
             let qty = cell.getRow().getData().quantity;
             if(qty < 1 || !qty) table.updateRow(cell.getRow().getIndex(), {quantity:"1"});
             table_taken.addData(cell.getRow().getData());
