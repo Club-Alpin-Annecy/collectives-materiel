@@ -21,22 +21,3 @@ class LeaderReservationForm(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-
-class ReservationItemForm(FlaskForm):
-    """
-    Form to add a item (an equipment type and it's quantity) in a reservation
-    """
-
-    class Meta:
-        model = ReservationLine
-
-    quantity = IntegerField("Quantité", default=1, validators=[NumberRange(1, 50)])
-
-    type = SelectField("Type", choices=[])
-
-    submit = SubmitField("Ajouter")
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.type.choices = [(i.id, i.name) for i in EquipmentType.query.all()]

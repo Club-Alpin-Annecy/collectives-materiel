@@ -12,7 +12,7 @@ from collectives.models.equipment import Equipment
 from ..models import db
 from ..models import Event, RoleIds
 from ..models.reservation import Reservation, ReservationLine
-from ..forms.reservation import LeaderReservationForm, ReservationItemForm
+from ..forms.reservation import LeaderReservationForm
 
 blueprint = Blueprint("reservation", __name__, url_prefix="/reservation")
 """ Reservation blueprint
@@ -113,14 +113,12 @@ def register(event_id=None, role_id=None):
 
     event = Event() if event_id is None else Event.query.get(event_id)
     form = LeaderReservationForm()
-    add_line_form = ReservationItemForm()
 
     if not form.validate_on_submit():
         return render_template(
             "reservation/editreservation.html",
             event=event,
             form=form,
-            add_line_form=add_line_form,
         )
 
     return redirect(url_for("reservation.view_reservations"))
