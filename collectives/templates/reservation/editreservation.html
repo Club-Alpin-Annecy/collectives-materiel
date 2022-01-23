@@ -28,32 +28,38 @@
       {% endfor %}
     {% endfor %}
   </div>
-
-  <div class="dates">
-    <div class="controls">
-      <div class="datetimepicker" id="datetimepickerstart">
-        {{ form.collect_date.label }} : {{ form.collect_date(type="datetime") }}
+  <form
+    action="{{ url_for('reservation.register', event_id=event.id, role_id=role_id) }}"
+    method="POST"
+    enctype="multipart/form-data"
+    class="form"
+  >
+    <div class="dates">
+      <div class="controls">
+        <div class="datetimepicker" id="datetimepickerstart">
+          <label for="collect_date">Date : </label>{{ form.collect_date() }}
+        </div>
       </div>
     </div>
-  </div>
 
-  <h4>Ajouter un équipement</h4>
-  <div id="equipment-type-table"></div>
-  <script>
-    const token_csrf = "{{ csrf_token() }}";
-    const icon_add_column = "{{ url_for('static', filename='img/icon/ionicon/md-add-circle-outline.svg') }}";
-    var ajaxURL = "{{url_for('api.equipmentTypes')}}";
-  </script>
-  <script src="{{ url_for('static', filename='js/equipment/tabulator_equipment_types_add.js') }}"></script>
+    <h4>Ajouter un équipement</h4>
+    <div id="equipment-type-table"></div>
+    <script>
+      const token_csrf = "{{ csrf_token() }}";
+      const icon_add_column = "{{ url_for('static', filename='img/icon/ionicon/md-add-circle-outline.svg') }}";
+      var ajaxURL = "{{url_for('api.equipmentTypes')}}";
+    </script>
+    <script src="{{ url_for('static', filename='js/equipment/tabulator_equipment_types_add.js') }}"></script>
 
-  <h4>Votre panier</h4>
-  <div id="equipment-type-taken-table"></div>
-  <script src="{{ url_for('static', filename='js/equipment/tabulator_equipment_types_taken.js') }}"></script>
+    <h4>Votre panier</h4>
+    <div id="equipment-type-taken-table"></div>
+    <script src="{{ url_for('static', filename='js/equipment/tabulator_equipment_types_taken.js') }}"></script>
 
-  <div class="controls">
-    {{ form.submit(class="button button-primary") }}
-  </div>
-
+    {{ form.hidden_tag() }}
+    <div class="controls">
+      {{ form.submit(class="button button-primary") }}
+    </div>
+  </form>
 </div>
 <script>
   document.querySelectorAll("input[type=datetime]").forEach(function(input){

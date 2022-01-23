@@ -87,7 +87,9 @@ def manage_reservation(reservation_id=None):
     )
 
 
-@blueprint.route("event/<int:event_id>/role/<int:role_id>/register", methods=["GET","POST"])
+@blueprint.route(
+    "event/<int:event_id>/role/<int:role_id>/register", methods=["GET", "POST"]
+)
 def register(event_id=None, role_id=None):
     """Page for user to create a new reservation.
 
@@ -108,20 +110,28 @@ def register(event_id=None, role_id=None):
         return redirect(url_for("event.view_event", event_id=event_id))
 
     if not role.relates_to_activity():
-        flash("Role not implemented yet")
+        flash("Role non implémenté")
         return redirect(url_for("event.view_event", event_id=event_id))
 
     event = Event() if event_id is None else Event.query.get(event_id)
     form = LeaderReservationForm()
-
+    reservation = Reservation()
     if not form.validate_on_submit():
         return render_template(
             "reservation/editreservation.html",
             event=event,
+            role_id=role_id,
             form=form,
         )
+    reservation.collect_date = form.collect_date.data
+    reservation.event = event
+    reservation.user = current_user
+    db.session.add(reservation)
+    db.session.commit()
 
-    return redirect(url_for("reservation.view_reservations"))
+    return redirect(
+        url_for("reservation.view_reservation", reservation_id=reservation.id)
+    )
 
 
 @blueprint.route("/line/<int:reservationLine_id>", methods=["GET", "POST"])
