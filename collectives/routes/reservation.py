@@ -2,12 +2,15 @@
 
 This modules contains the /reservation Blueprint
 """
+
+
 from flask_login import current_user
 from flask import render_template, redirect, url_for
 from flask import Blueprint, flash
 
 from collectives.forms.equipment import AddEquipmentInReservation
-from collectives.models.equipment import Equipment
+from collectives.models.equipment import Equipment, EquipmentStatus
+from collectives.utils.access import valid_user, confidentiality_agreement, user_is
 
 from ..models import db
 from ..models import Event, RoleIds
@@ -21,6 +24,22 @@ This blueprint contains all routes for reservations
 """
 
 
+@blueprint.before_request
+@valid_user()
+@confidentiality_agreement()
+@user_is("can_manage_reservation")
+def before_request():
+    """Protect all of the admin endpoints.
+
+    Protection is done by the decorator:
+
+    - check if user is valid :py:func:`collectives.utils.access.valid_user`
+    - check if user has signed the confidentiality agreement :py:func:`collectives.utils.access.confidentiality_agreement`
+    - check if user is allowed to manage reservation :py:func:`collectives.utils.access.user_is`
+    """
+    pass
+
+
 @blueprint.route("/", methods=["GET"])
 def view_reservations():
     """
@@ -28,7 +47,26 @@ def view_reservations():
     """
     return render_template(
         "reservation/reservations.html",
-        reservations=Reservation.query.all(),
+    )
+
+
+@blueprint.route("/reservation_of_day", methods=["GET"])
+def view_reservations_of_week():
+    """
+    Show the reservations of the week
+    """
+    return render_template(
+        "reservation/reservationsDay.html",
+    )
+
+
+@blueprint.route("/reservations_returns_of_day", methods=["GET"])
+def view_reservations_returns_of_week():
+    """
+    Show the reservations returns of the week
+    """
+    return render_template(
+        "reservation/reservationsReturnDay.html",
     )
 
 
@@ -136,6 +174,10 @@ def view_reservationLine(reservationLine_id):
     if form.validate_on_submit():
         equipment = Equipment.query.get(form.add_equipment.data)
         reservationLine.equipments.append(equipment)
+        equipment.status = EquipmentStatus.Rented
+        return redirect(
+            url_for(".view_reservationLine", reservationLine_id=reservationLine_id)
+        )
     return render_template(
         "reservation/reservationLine.html", reservationLine=reservationLine, form=form
     )

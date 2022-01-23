@@ -88,6 +88,13 @@ class ReservationLine(db.Model):
     """ Primary key of the related reservation (see  :py:class:`collectives.models.reservation.Reservation`).
     :type: int"""
 
+    def is_not_full(self):
+        """
+        :return: True if the reservation line is not full
+        :rtype: bool"""
+        print(self.equipments)
+        return self.quantity > len(self.equipments)
+
 
 class Reservation(db.Model):
     """Class of an reservation.
