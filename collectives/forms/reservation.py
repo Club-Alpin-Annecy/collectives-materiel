@@ -66,7 +66,7 @@ class LeaderReservationForm(ModelForm, FlaskForm):
 
         if "obj" in kwargs:
             self.source_event = kwargs["obj"]
-            self.collect_date = self.source_event.start
+            self.collect_date.data = self.source_event.start
             print("KWARGS", kwargs)
 
     def setup_line_forms(self):
