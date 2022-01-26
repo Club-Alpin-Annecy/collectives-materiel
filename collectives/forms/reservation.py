@@ -57,7 +57,7 @@ class LeaderReservationForm(ModelForm, FlaskForm):
     quantity = IntegerField("Quantité")
     update_lines = HiddenField(default=0)
 
-    source_reservation = None
+    source_event = None
 
     lines = []
 
@@ -65,7 +65,8 @@ class LeaderReservationForm(ModelForm, FlaskForm):
         super().__init__(*args, **kwargs)
 
         if "obj" in kwargs:
-            self.source_reservation = kwargs["obj"]
+            self.source_event = kwargs["obj"]
+            self.collect_date = self.source_event.start
             print("KWARGS", kwargs)
 
     def setup_line_forms(self):

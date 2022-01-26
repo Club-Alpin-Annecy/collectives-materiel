@@ -120,6 +120,7 @@ def register(event_id, role_id=None):
 
     reservation = Reservation()
     if not form.is_submitted():
+        form = LeaderReservationForm(obj=event)
         form.setup_line_forms()
         return render_template(
             "reservation/editreservation.html", event=event, role_id=role_id, form=form
@@ -165,12 +166,16 @@ def register(event_id, role_id=None):
             form=form,
         )
 
-    # reservation.collect_date = form.collect_date.data
-    # reservation.event = event
-    # reservation.user = current_user
-    # reservation.lines = form.lines
-    # db.session.add(reservation)
-    # db.session.commit()
+    reservation.collect_date = form.collect_date.data
+    reservation.event = event
+    reservation.user = current_user
+    for line in form.lines:
+        db.session.add(line)
+
+    reservation.lines = form.lines
+    db.session.add(reservation)
+
+    db.session.commit()
 
     return redirect(
         url_for("reservation.view_reservation", reservation_id=reservation.id)
