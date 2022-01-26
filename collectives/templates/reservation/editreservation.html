@@ -9,6 +9,11 @@
   <script src="{{ url_for('static', filename='js/tail.datetime-full.min.js') }}"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tail.datetime-harx-light.min.css')}}">
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment-with-locales.min.js"></script>
+
+  {# Autocomplete #}
+  <script src="https://unpkg.com/js-autocomplete@1.0.4/auto-complete.min.js"></script>
+  <link href="https://unpkg.com/js-autocomplete@1.0.4/auto-complete.css" rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/utils/autocomplete.js') }}"></script>
 {% endblock %}
 
 {% block header %}
@@ -42,22 +47,28 @@
       </div>
     </div>
 
-    <h4>Ajouter un équipement</h4>
-    <div id="equipment-type-table"></div>
-    <script>
-      const token_csrf = "{{ csrf_token() }}";
-      const icon_add_column = "{{ url_for('static', filename='img/icon/ionicon/md-add-circle-outline.svg') }}";
-      var ajaxURL = "{{url_for('api.equipmentTypes')}}";
-    </script>
-    <script src="{{ url_for('static', filename='js/equipment/tabulator_equipment_types_add.js') }}"></script>
+    <div class="controls">
+      {{ form.quantity.label }}
+      {{ form.quantity }}
+      <input type="text" id="new-type" placeholder="Type...">
+      {{ form.add_line(value=0) }}
+      <button class="button button-primary" onclick="updateLines(document.getElementById('{{form.add_line.id}}'));">Ajouter</button>
+    </div>
+    {{ form.update_lines(value=0) }}
 
-    <h4>Votre panier</h4>
-    <div id="equipment-type-taken-table"></div>
-    <script src="{{ url_for('static', filename='js/equipment/tabulator_equipment_types_taken.js') }}"></script>
+    <div id="encadrement">
+      <h4>Votre panier</h4>
+      {% for line_form in form.line_forms %}
+        {% with line = form.lines[loop.index0]%}
+          Quantité : {{line.quantity}} |
+          Nom : {{line.equipmentType.name}}
+        {% endwith %}
+      {% endfor %}
+    </div>
 
     {{ form.hidden_tag() }}
     <div class="controls">
-      {{ form.submit(class="button button-primary") }}
+      {{ form.save_all() }}
     </div>
   </form>
 </div>
@@ -76,5 +87,33 @@
         classNames:"form-tail-datetime default",
     });
   });
+
+  function updateLines(element) {
+    let field = document.getElementById('update_lines');
+    field.value = 1;
+    element.form.submit();
+  }
+
+  window.onload = function () {
+    const searchInput = document.getElementById('new-type');
+    let name;
+    setupAutoComplete(
+      searchInput,
+      '{{url_for("api.find_equipment_types", eid=form.equipment_type_ids()) | safe}}',
+      function(item) {
+        name = item.name
+        if(item.pathImg == undefined) {
+          return "<img src='/static/img/icon/ionicon/md-images.svg' style='margin: 0;height: 1.2em; width: 1.2em' class='photo' alt='"+item.name+"'/>"+item.name;
+        } else {
+          return "<img src='"+item.pathImg+"' style='margin: 0;height: 1.2em; width: 1.2em' class='photo' alt='"+item.name+"'/>"+item.name;
+        }
+      },
+      function(id, val) {
+        searchInput.value = name;
+        var field = document.getElementById('{{form.add_line.id}}');
+        field.value = id;
+      }
+      );
+  }
 </script>
 {% endblock %}

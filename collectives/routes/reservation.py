@@ -2,12 +2,13 @@
 
 This modules contains the /reservation Blueprint
 """
+
 from flask_login import current_user
-from flask import render_template, redirect, url_for
+from flask import render_template, redirect, url_for, request
 from flask import Blueprint, flash
 
 from collectives.forms.equipment import AddEquipmentInReservation
-from collectives.models.equipment import Equipment
+from collectives.models.equipment import Equipment, EquipmentType
 
 from ..models import db
 from ..models import Event, RoleIds
@@ -90,12 +91,12 @@ def manage_reservation(reservation_id=None):
 @blueprint.route(
     "event/<int:event_id>/role/<int:role_id>/register", methods=["GET", "POST"]
 )
-def register(event_id=None, role_id=None):
+def register(event_id, role_id=None):
     """Page for user to create a new reservation.
 
     The displayed form depends on the role_id, a leader can create an reservation without paying
     and without a max number of equipment.
-    The reservation will relate to the event of event_id.
+    The reservation will related to the event of event_id.
 
     :param int role_id: Role that the user wishes to register has.
     :param int event_id: Primary key of the related event.
@@ -113,21 +114,63 @@ def register(event_id=None, role_id=None):
         flash("Role non implémenté")
         return redirect(url_for("event.view_event", event_id=event_id))
 
-    event = Event() if event_id is None else Event.query.get(event_id)
-    form = LeaderReservationForm()
+    event = Event.query.get(event_id)
+    print("REQUEST FORM -", request.form)
+    form = LeaderReservationForm(request.form)
+
     reservation = Reservation()
-    if not form.validate_on_submit():
+    if not form.is_submitted():
+        form.setup_line_forms()
+        return render_template(
+            "reservation/editreservation.html", event=event, role_id=role_id, form=form
+        )
+
+    previous_lines = []
+    tentative_lines = []
+    print("PREVIOUS - ", form.lines, form.line_forms.data)
+    for line_form in form.line_forms:
+        line = ReservationLine()
+        e_type = EquipmentType.query.get(line_form.data["equipment_type_id"])
+        if e_type is None:
+            flash("Type invalide")
+            continue
+        line.quantity = line_form.data["quantity"]
+        line.equipment_type_id = e_type.id
+
+        previous_lines.append(line)
+        tentative_lines.append(line)
+
+    form.set_lines(previous_lines)
+
+    new_line_id = int(form.add_line.data)
+    if new_line_id > 0:
+        new_line = ReservationLine()
+        new_line.equipment_type_id = new_line_id
+        new_line.equipmentType = EquipmentType.query.get(new_line_id)
+        new_line.quantity = form.quantity.data
+        print(
+            "ADD - Name :", new_line.equipmentType.name, ", Quantité", new_line.quantity
+        )
+        tentative_lines.append(new_line)
+
+    # Updated lines, removed lines, or added line doesn't validate, will redirect to the edit page
+    if int(form.update_lines.data) or not form.validate_on_submit():
+        form.set_lines(tentative_lines)
+        form.setup_line_forms()
+        print("NEW -", form.lines, form.line_forms.data)
         return render_template(
             "reservation/editreservation.html",
             event=event,
             role_id=role_id,
             form=form,
         )
-    reservation.collect_date = form.collect_date.data
-    reservation.event = event
-    reservation.user = current_user
-    db.session.add(reservation)
-    db.session.commit()
+
+    # reservation.collect_date = form.collect_date.data
+    # reservation.event = event
+    # reservation.user = current_user
+    # reservation.lines = form.lines
+    # db.session.add(reservation)
+    # db.session.commit()
 
     return redirect(
         url_for("reservation.view_reservation", reservation_id=reservation.id)
