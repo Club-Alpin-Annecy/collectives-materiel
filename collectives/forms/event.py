@@ -158,7 +158,6 @@ class EventForm(ModelForm, FlaskForm):
         if "obj" in kwargs:
             # Reading from an existing event
             self.source_event = kwargs["obj"]
-            print("\n\n", vars(self.source_event), "\n\n")
             activities = self.source_event.activity_types
             self.multi_activities_mode.data = len(activities) > 1 or any(
                 leaders_without_activities(activities, self.source_event.leaders)

@@ -21,19 +21,15 @@ class ReservationLineDefault:
 
     equipment_type_id = -1
     delete = False
-    quantity = 1
+    quantity_line = 1
 
 
-class ReservationLineForm(ModelForm, FlaskForm):
+class ReservationLineForm(FlaskForm):
     """
     Form for user to edit quantity of a reservation line
     """
-
-    class Meta:
-        model = ReservationLine
-
     equipment_type_id = HiddenField()
-    quantity = IntegerField("Quantité")
+    quantity_line = IntegerField("Quantité")
     delete = SubmitField("Supprimer")
     name = StringField("Nom du type", default="Non renseigné")
 
@@ -67,11 +63,10 @@ class LeaderReservationForm(ModelForm, FlaskForm):
         if "obj" in kwargs:
             self.source_event = kwargs["obj"]
             self.collect_date.data = self.source_event.start
-            print("KWARGS", kwargs)
 
     def setup_line_forms(self):
         """
-        Sets up line_forms (FieldList) using lines (List of :py:class:`collectives.models.equipment.EquipmentType`)
+        Sets up line_forms (FieldList) using lines (List of :py:class:`collectives.models.reservation.ReservationLine`)
         """
         # Remove all existing entries
         # while len(self.line_forms) > 0:
@@ -83,7 +78,7 @@ class LeaderReservationForm(ModelForm, FlaskForm):
             form = ReservationLineForm()
             form.delete = False
             form.equipment_type_id = e_type.id
-            form.quantity = line.quantity
+            form.quantity_line = line.quantity
             self.line_forms.append_entry(form)
 
     def set_lines(self, lines):

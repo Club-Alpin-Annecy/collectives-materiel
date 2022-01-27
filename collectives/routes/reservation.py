@@ -115,7 +115,7 @@ def register(event_id, role_id=None):
         return redirect(url_for("event.view_event", event_id=event_id))
 
     event = Event.query.get(event_id)
-    print("REQUEST FORM -", request.form)
+    print("\nREQUEST FORM -", request.form)
     form = LeaderReservationForm(request.form)
 
     reservation = Reservation()
@@ -128,7 +128,10 @@ def register(event_id, role_id=None):
 
     previous_lines = []
     tentative_lines = []
+    print("PREVIOUS UL - ", form.line_forms)
     print("PREVIOUS - ", form.lines, form.line_forms.data)
+
+    #Fetch previous lines
     for line_form in form.line_forms:
         line = ReservationLine()
         e_type = EquipmentType.query.get(line_form.data["equipment_type_id"])
@@ -154,11 +157,12 @@ def register(event_id, role_id=None):
         )
         tentative_lines.append(new_line)
 
+    # print("TENTATIVE -", tentative_lines)
     # Updated lines, removed lines, or added line doesn't validate, will redirect to the edit page
     if int(form.update_lines.data) or not form.validate_on_submit():
         form.set_lines(tentative_lines)
         form.setup_line_forms()
-        print("NEW -", form.lines, form.line_forms.data)
+        print("NEW -", form.lines, "\n\n",form.line_forms,"\n\n", form.line_forms.data,"\n")
         return render_template(
             "reservation/editreservation.html",
             event=event,
@@ -169,7 +173,11 @@ def register(event_id, role_id=None):
     reservation.collect_date = form.collect_date.data
     reservation.event = event
     reservation.user = current_user
+    db.session.add(reservation)
+
     for line in form.lines:
+        line.reservation_id = reservation.id
+        line.reservation = reservation
         db.session.add(line)
 
     reservation.lines = form.lines
