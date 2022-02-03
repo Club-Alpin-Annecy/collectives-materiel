@@ -11,27 +11,18 @@ from wtforms_alchemy import ModelForm
 
 from collectives.models.equipment import EquipmentType
 
-from ..models.reservation import Reservation, ReservationLine
-
-
-class ReservationLineDefault:
-    """
-    Class describing the action to be performed for a given reservation line
-    """
-
-    equipment_type_id = -1
-    delete = False
-    quantity_line = 1
+from ..models.reservation import Reservation
 
 
 class ReservationLineForm(FlaskForm):
     """
-    Form for user to edit quantity of a reservation line
+    Form for user to edit quantity of a reservation line or delete it
     """
+
     equipment_type_id = HiddenField()
     quantity_line = IntegerField("Quantité")
     delete = SubmitField("Supprimer")
-    name = StringField("Nom du type", default="Non renseigné")
+    name = StringField("Nom")
 
 
 class LeaderReservationForm(ModelForm, FlaskForm):
@@ -43,9 +34,7 @@ class LeaderReservationForm(ModelForm, FlaskForm):
         model = Reservation
         include = ["collect_date"]
 
-    line_forms = FieldList(
-        FormField(ReservationLineForm, default=ReservationLineDefault())
-    )
+    line_forms = FieldList(FormField(ReservationLineForm))
 
     save_all = SubmitField("Enregistrer")
 
@@ -69,8 +58,8 @@ class LeaderReservationForm(ModelForm, FlaskForm):
         Sets up line_forms (FieldList) using lines (List of :py:class:`collectives.models.reservation.ReservationLine`)
         """
         # Remove all existing entries
-        # while len(self.line_forms) > 0:
-        #     self.line_forms.pop_entry()
+        while len(self.line_forms) > 0:
+            self.line_forms.pop_entry()
 
         for line in self.lines:
             e_type = EquipmentType.query.get(line.equipment_type_id)
@@ -79,6 +68,10 @@ class LeaderReservationForm(ModelForm, FlaskForm):
             form.delete = False
             form.equipment_type_id = e_type.id
             form.quantity_line = line.quantity
+            form.name = e_type.name
+            print(
+                "ADDED IN SETUP - Quantité :", form.quantity_line, ", Name :", form.name
+            )
             self.line_forms.append_entry(form)
 
     def set_lines(self, lines):

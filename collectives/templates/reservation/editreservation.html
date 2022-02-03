@@ -62,6 +62,7 @@
         {% with line = form.lines[loop.index0]%}
           Quantité : {{line.quantity}} |
           Nom : {{line.equipmentType.name}}
+          {{line_form.delete(onclick="document.getElementById('update_lines').value = 1")}}
         {% endwith %}
       {% endfor %}
     </div>

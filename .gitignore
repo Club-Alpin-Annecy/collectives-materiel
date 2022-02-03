@@ -8,7 +8,7 @@ uploads
 
 # Test DB
 collectives/testdb.sqlite
-
+collectives/routes/populate_db_equipment_reservation.py
 .env
 .coverage
 

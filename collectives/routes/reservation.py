@@ -115,54 +115,64 @@ def register(event_id, role_id=None):
         return redirect(url_for("event.view_event", event_id=event_id))
 
     event = Event.query.get(event_id)
-    print("\nREQUEST FORM -", request.form)
+    # print("\nREQUEST FORM -", request.form)
     form = LeaderReservationForm(request.form)
 
     reservation = Reservation()
     if not form.is_submitted():
         form = LeaderReservationForm(obj=event)
-        form.setup_line_forms()
         return render_template(
             "reservation/editreservation.html", event=event, role_id=role_id, form=form
         )
 
     previous_lines = []
     tentative_lines = []
-    print("PREVIOUS UL - ", form.line_forms)
-    print("PREVIOUS - ", form.lines, form.line_forms.data)
+    has_removed_lines = False
 
-    #Fetch previous lines
+    print("\nPREVIOUS LINES - ", form.lines, form.line_forms.data)
+    # Fetch previous lines
     for line_form in form.line_forms:
-        line = ReservationLine()
+        # Create new ReservationLine from line
         e_type = EquipmentType.query.get(line_form.data["equipment_type_id"])
         if e_type is None:
-            flash("Type invalide")
+            flash("Type inexistant")
             continue
+        line = ReservationLine()
         line.quantity = line_form.data["quantity"]
         line.equipment_type_id = e_type.id
+        line.equipmentType = e_type
 
+        # Add to previous lines, also to tentative lines if no delete action
         previous_lines.append(line)
-        tentative_lines.append(line)
+        if line_form.data["delete"]:
+            has_removed_lines = True
+        else:
+            tentative_lines.append(line)
 
+    # Update form with previous lines that are undeleted
     form.set_lines(previous_lines)
 
+    # Check if new line has been added
     new_line_id = int(form.add_line.data)
-    if new_line_id > 0:
+    if new_line_id != 0:
         new_line = ReservationLine()
         new_line.equipment_type_id = new_line_id
         new_line.equipmentType = EquipmentType.query.get(new_line_id)
         new_line.quantity = form.quantity.data
         print(
-            "ADD - Name :", new_line.equipmentType.name, ", Quantité", new_line.quantity
+            "ADDED - Name :",
+            new_line.equipmentType.name,
+            ", Quantité :",
+            new_line.quantity,
         )
         tentative_lines.append(new_line)
 
-    # print("TENTATIVE -", tentative_lines)
-    # Updated lines, removed lines, or added line doesn't validate, will redirect to the edit page
-    if int(form.update_lines.data) or not form.validate_on_submit():
+    print("TENTATIVE -", tentative_lines)
+    # Form won't validate if we just added or deleted lines
+    if has_removed_lines or int(form.update_lines.data):
         form.set_lines(tentative_lines)
         form.setup_line_forms()
-        print("NEW -", form.lines, "\n\n",form.line_forms,"\n\n", form.line_forms.data,"\n")
+        print("NEW -", form.lines, "\n\n", form.line_forms.data, "\n")
         return render_template(
             "reservation/editreservation.html",
             event=event,
@@ -173,13 +183,6 @@ def register(event_id, role_id=None):
     reservation.collect_date = form.collect_date.data
     reservation.event = event
     reservation.user = current_user
-    db.session.add(reservation)
-
-    for line in form.lines:
-        line.reservation_id = reservation.id
-        line.reservation = reservation
-        db.session.add(line)
-
     reservation.lines = form.lines
     db.session.add(reservation)
 
