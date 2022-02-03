@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from wtforms import (
     SubmitField,
     FieldList,
@@ -8,7 +9,6 @@ from wtforms import (
 )
 from flask_wtf.form import FlaskForm
 from wtforms_alchemy import ModelForm
-
 from collectives.models.equipment import EquipmentType
 
 from ..models.reservation import Reservation
@@ -39,7 +39,7 @@ class LeaderReservationForm(ModelForm, FlaskForm):
     save_all = SubmitField("Enregistrer")
 
     add_line = HiddenField("Ajouter de l'équipement", default=0)
-    quantity = IntegerField("Quantité")
+    quantity = IntegerField("Quantité", render_kw={"placeholder": "Quantité..."})
     update_lines = HiddenField(default=0)
 
     source_event = None
@@ -51,7 +51,10 @@ class LeaderReservationForm(ModelForm, FlaskForm):
 
         if "obj" in kwargs:
             self.source_event = kwargs["obj"]
-            self.collect_date.data = self.source_event.start
+            self.collect_date.data = (self.source_event.start).replace(
+                hour=(datetime.now() + timedelta(hours=1)).hour,
+                minute=0,
+            )
 
     def setup_line_forms(self):
         """

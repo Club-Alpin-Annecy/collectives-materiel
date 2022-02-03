@@ -42,13 +42,15 @@
     <div class="dates">
       <div class="controls">
         <div class="datetimepicker" id="datetimepickerstart">
-          <label for="collect_date">Date : </label>{{ form.collect_date }}
+          <label for="collect_date">Date : </label>{{ form.collect_date(onchange="checkDate()") }}
         </div>
+        <span id="start_in_past_error" class="date_error flash flash-error">
+          La date de réservation est déjà passée
+        </span>
       </div>
     </div>
 
     <div class="controls">
-      {{ form.quantity.label }}
       {{ form.quantity }}
       <input type="text" id="new-type" placeholder="Type...">
       {{ form.add_line(value=0) }}
@@ -74,6 +76,16 @@
   </form>
 </div>
 <script>
+
+  function checkDate() {
+    const start = document.getElementById("collect_date");
+    const start_in_past = document.getElementById("start_in_past_error");
+    start_in_past.style.display = "none";
+    if(moment(start.value) < new Date()) {
+      start_in_past.style.display = "inline";
+      start.setCustomValidity("Doit être après la date du jour");
+    }
+  }
   document.querySelectorAll("input[type=datetime]").forEach(function(input){
     var datepicker = tail.DateTime(input,{
         animate: false,
