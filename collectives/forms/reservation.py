@@ -17,7 +17,7 @@ class LeaderReservationForm(FlaskForm):
     submit = SubmitField("Enregistrer")
     collect_date = DateTimeField("Date")
     event = None
-    # lines = FieldList(FormList(ReservationLineForm))
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.event = kwargs["obj"]

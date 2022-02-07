@@ -186,13 +186,16 @@ def register(event_id, role_id=None):
         reservation.collect_date = form.collect_date.data
         db.session.add(reservation)
         db.session.commit()
-        print("\n\nICI\n\n", reservation.id)
 
         return redirect(
             url_for("reservation.view_reservation", reservation_id=reservation.id)
         )
-
-    return render_template("basicform.html", form=form, title="Création réservation")
+    return render_template(
+        "reservation/editreservation.html",
+        event=event,
+        role_id=role_id,
+        form=form,
+    )
 
 
 @blueprint.route("/line/<int:reservationLine_id>", methods=["GET", "POST"])
