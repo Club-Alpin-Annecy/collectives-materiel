@@ -5,16 +5,23 @@ function actionFormatter(cell, formatterParams, onRendered){
 function onclickTriggerInsideForm(e, cell){
   cell._cell.element.querySelector('form').submit();
 }
+
+function cellInTable(tab, value){
+  for(row of tab.getData()) {
+    if(row.id == value) { console.log("true"); return true }
+  }
+  return false;
+}
 //initialize table
 let table = new Tabulator("#equipment-type-table", {
-    ajaxURL:ajaxURL,
+      ajaxURL:ajaxURL,
       layout:"fitColumns",      //fit columns to width of table
       responsiveLayout:"hide",  //hide columns that dont fit on the table
       tooltips:true,            //show tool tips on cells
       addRowPos:"top",          //when adding a new row, add it to the top of the table
       history:true,             //allow undo and redo actions on the table
       pagination:"local",       //paginate the data
-      paginationSize:7,         //allow 7 rows per page of data
+      paginationSize:4,         //allow 7 rows per page of data
       movableColumns:true,      //allow column order to be changed
       resizableRows:true,       //allow row order to be changed
       initialSort:[             //set the initial sort order of the data
@@ -23,23 +30,23 @@ let table = new Tabulator("#equipment-type-table", {
       columns:[                 //define the table columns
         //{title:"id", field:"id", formatter:"number"},
         {title:"Photo", field:"pathImg", formatter:"image", formatterParams:{height: '7em'}},
-        {title:"Name", headerFilter:"input",field:"name"},
-        {title:"Quantity", field:"quantity", editor:"number", editorParams:{
-          min:0, max:20, step:1,
-          elementAttributes:{
-              maxlength:"2", //set the maximum character length of the input element to 10 characters
+        {title:"Type", headerFilter:"input",field:"name"},
+        {title:"Quantité", field:"quantity", editor:"number",
+          editorParams:{
+            min:0, max:50, step:1,
+            elementAttributes:{maxlength:"2"},
           },
-        }},
-        {title:"Add", field:"Ajouter", headerSort:false,
-          formatter : actionFormatter, formatterParams:{'icon': 'add-circle-outline', 'method': 'POST', 'alt': 'Add'},
+          validator:["integer","max:50"]
+        },
+        {title:"Ajouter au panier", headerSort:false,
+          formatter : actionFormatter, formatterParams:{'icon': 'add-circle-outline', 'method': 'POST', 'alt': 'Ajouter'},
           cellClick : function(e,cell) {
-            let id = cell.getRow().getData().id
-            let qty = cell.getRow().getData().quantity
-            axios.defaults.headers.common['X-CSRF-TOKEN'] = token_csrf;
-            axios.post('/api/reservation_line_add/'+id+'/'+qty)
-            .then((response)=>{
-              cell.getTable().replaceData();
-            })
+            let row = cell.getRow();
+            let qty = row.getData().quantity;
+            if(!cellInTable(table_taken, row.getData().id)) {
+              if(qty < 1 || !qty) table.updateRow(row.getIndex(), {quantity:1});
+              table_taken.addData(row.getData());
+            }
           }
         }
       ],

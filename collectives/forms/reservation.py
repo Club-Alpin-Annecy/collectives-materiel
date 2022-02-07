@@ -1,10 +1,8 @@
-from wtforms import DateField, SubmitField
+from datetime import datetime, timedelta
+from wtforms import SubmitField, DateTimeField
 from flask_wtf.form import FlaskForm
-from wtforms.fields.core import IntegerField, SelectField
-from wtforms.validators import NumberRange
 
-from ..models.equipment import EquipmentType
-from ..models.reservation import Reservation, ReservationLine
+from ..models.reservation import Reservation
 
 
 class LeaderReservationForm(FlaskForm):
@@ -14,29 +12,16 @@ class LeaderReservationForm(FlaskForm):
 
     class Meta:
         model = Reservation
-
-    collect_date = DateField("Date d'emprunt", format="%d/%m/%Y")
+        include = ["collect_date"]
 
     submit = SubmitField("Enregistrer")
-
+    collect_date = DateTimeField("Date")
+    event = None
+    # lines = FieldList(FormList(ReservationLineForm))
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-
-class ReservationItemForm(FlaskForm):
-    """
-    Form to add a item (an equipment type and it's quantity) in a reservation
-    """
-
-    class Meta:
-        model = ReservationLine
-
-    quantity = IntegerField("Quantité", default=1, validators=[NumberRange(1, 50)])
-
-    type = SelectField("Type", choices=[])
-
-    submit = SubmitField("Ajouter")
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.type.choices = [(i.id, i.name) for i in EquipmentType.query.all()]
+        self.event = kwargs["obj"]
+        self.collect_date.data = (self.event.start).replace(
+            hour=(datetime.now() + timedelta(hours=1)).hour,
+            minute=0,
+        )
