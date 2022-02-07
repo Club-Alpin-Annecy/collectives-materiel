@@ -4,7 +4,7 @@ This modules contains the /reservation Blueprint
 """
 
 from flask_login import current_user
-from flask import render_template, redirect, url_for, request
+from flask import render_template, redirect, url_for
 from flask import Blueprint, flash
 from wtforms import IntegerField
 from collectives.forms.equipment import AddEquipmentInReservation
@@ -118,6 +118,7 @@ def register(event_id, role_id=None):
     # print("\nREQUEST FORM -", request.form)
 
     class F(LeaderReservationForm):
+        """ Empty class to create fields dynamically """
         pass
 
     for e in EquipmentType.query.all():
@@ -132,7 +133,7 @@ def register(event_id, role_id=None):
             flash("La réservation est incorrecte")
 
         reservation = Reservation()
-        for e in  EquipmentType.query.all():
+        for e in EquipmentType.query.all():
             quantity = getattr(form, f"field{e.id}").data
             if quantity <= 0:
                 continue
@@ -147,13 +148,14 @@ def register(event_id, role_id=None):
         reservation.collect_date = form.collect_date.data
         db.session.add(reservation)
         db.session.commit()
-        print("\n\nICI\n\n",reservation.id)
+        print("\n\nICI\n\n", reservation.id)
 
-        return redirect(url_for("reservation.view_reservation", reservation_id=reservation.id))
+        return redirect(
+            url_for("reservation.view_reservation", reservation_id=reservation.id)
+        )
 
-    return render_template(
-        "basicform.html", form=form, title="Création réservation"
-    )
+    return render_template("basicform.html", form=form, title="Création réservation")
+
 
 @blueprint.route("/line/<int:reservationLine_id>", methods=["GET", "POST"])
 def view_reservationLine(reservationLine_id):
