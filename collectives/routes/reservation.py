@@ -6,7 +6,7 @@ This modules contains the /reservation Blueprint
 from flask_login import current_user
 from flask import render_template, redirect, url_for, request
 from flask import Blueprint, flash
-
+from wtforms import IntegerField
 from collectives.forms.equipment import AddEquipmentInReservation
 from collectives.models.equipment import Equipment, EquipmentType
 
@@ -116,82 +116,44 @@ def register(event_id, role_id=None):
 
     event = Event.query.get(event_id)
     # print("\nREQUEST FORM -", request.form)
-    form = LeaderReservationForm(request.form)
 
-    reservation = Reservation()
-    if not form.is_submitted():
-        form = LeaderReservationForm(obj=event)
-        return render_template(
-            "reservation/editreservation.html", event=event, role_id=role_id, form=form
-        )
+    class F(LeaderReservationForm):
+        pass
 
-    previous_lines = []
-    tentative_lines = []
-    has_removed_lines = False
+    for e in EquipmentType.query.all():
+        field = IntegerField(f"{e.name}", default=0)
+        setattr(F, f"field{e.id}", field)
 
-    print("\nPREVIOUS LINES - ", form.lines, form.line_forms.data)
-    # Fetch previous lines
-    for line_form in form.line_forms:
-        # Create new ReservationLine from line
-        e_type = EquipmentType.query.get(line_form.data["equipment_type_id"])
-        if e_type is None:
-            flash("Type inexistant")
-            continue
-        line = ReservationLine()
-        line.quantity = line_form.data["quantity"]
-        line.equipment_type_id = e_type.id
-        line.equipmentType = e_type
+    form = F(obj=event)
 
-        # Add to previous lines, also to tentative lines if no delete action
-        previous_lines.append(line)
-        if line_form.data["delete"]:
-            has_removed_lines = True
-        else:
-            tentative_lines.append(line)
+    if form.is_submitted():
 
-    # Update form with previous lines that are undeleted
-    form.set_lines(previous_lines)
+        if not form.validate():
+            flash("La réservation est incorrecte")
 
-    # Check if new line has been added
-    new_line_id = int(form.add_line.data)
-    if new_line_id != 0:
-        new_line = ReservationLine()
-        new_line.equipment_type_id = new_line_id
-        new_line.equipmentType = EquipmentType.query.get(new_line_id)
-        new_line.quantity = form.quantity.data
-        print(
-            "ADDED - Name :",
-            new_line.equipmentType.name,
-            ", Quantité :",
-            new_line.quantity,
-        )
-        tentative_lines.append(new_line)
+        reservation = Reservation()
+        for e in  EquipmentType.query.all():
+            quantity = getattr(form, f"field{e.id}").data
+            if quantity <= 0:
+                continue
+            resa_line = ReservationLine()
+            resa_line.reservation_id = reservation.id
+            resa_line.quantity = quantity
+            resa_line.equipment_type_id = e.id
+            reservation.lines.append(resa_line)
 
-    print("TENTATIVE -", tentative_lines)
-    # Form won't validate if we just added or deleted lines
-    if has_removed_lines or int(form.update_lines.data):
-        form.set_lines(tentative_lines)
-        form.setup_line_forms()
-        print("NEW -", form.lines, "\n\n", form.line_forms.data, "\n")
-        return render_template(
-            "reservation/editreservation.html",
-            event=event,
-            role_id=role_id,
-            form=form,
-        )
+        reservation.event = event
+        reservation.user = current_user
+        reservation.collect_date = form.collect_date.data
+        db.session.add(reservation)
+        db.session.commit()
+        print("\n\nICI\n\n",reservation.id)
 
-    reservation.collect_date = form.collect_date.data
-    reservation.event = event
-    reservation.user = current_user
-    reservation.lines = form.lines
-    db.session.add(reservation)
+        return redirect(url_for("reservation.view_reservation", reservation_id=reservation.id))
 
-    db.session.commit()
-
-    return redirect(
-        url_for("reservation.view_reservation", reservation_id=reservation.id)
+    return render_template(
+        "basicform.html", form=form, title="Création réservation"
     )
-
 
 @blueprint.route("/line/<int:reservationLine_id>", methods=["GET", "POST"])
 def view_reservationLine(reservationLine_id):
