@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
-from wtforms import SubmitField, DateTimeField
+from wtforms import SubmitField
 from flask_wtf.form import FlaskForm
-
+from wtforms_alchemy import ModelForm
 from ..models.reservation import Reservation
 
 
-class LeaderReservationForm(FlaskForm):
+class LeaderReservationForm(FlaskForm, ModelForm):
     """Form for leaders to reserve equipment
     Contrary to lambda user, they don't need to pay nor specify a return date
     """
@@ -15,7 +15,6 @@ class LeaderReservationForm(FlaskForm):
         include = ["collect_date"]
 
     submit = SubmitField("Enregistrer")
-    collect_date = DateTimeField("Date")
     event = None
 
     def __init__(self, *args, **kwargs):

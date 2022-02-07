@@ -166,9 +166,14 @@ def register(event_id, role_id=None):
     form = F(obj=event)
 
     if form.is_submitted():
-
         if not form.validate():
             flash("La réservation est incorrecte")
+            return render_template(
+                "reservation/editreservation.html",
+                event=event,
+                role_id=role_id,
+                form=form,
+            )
 
         reservation = Reservation()
         for e in EquipmentType.query.all():
