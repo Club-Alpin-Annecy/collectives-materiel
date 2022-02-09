@@ -18,22 +18,22 @@
       },
         columns:[
           {
-            title:"collect_date",
+            title:"Date de collecte",
             headerFilter:"input",
             field:"collect_date",
           },
           {
-            title:"return_date",
+            title:"Date de retour",
             headerFilter:"input",
             field:"return_date",
           },
           {
-            title:"userLicence",
+            title:"Utilisateur",
             headerFilter:"input",
-            field:"userLicence",
+            field:"userFullname",
           },
           {
-            title:"Etat",
+            title:"État",
             headerFilter:"input",
             field:"statusName",
           },

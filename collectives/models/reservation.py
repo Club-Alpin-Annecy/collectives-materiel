@@ -3,6 +3,7 @@
 
 from datetime import datetime
 from sqlalchemy import CheckConstraint
+
 from .globals import db
 from .utils import ChoiceEnum
 
@@ -88,12 +89,70 @@ class ReservationLine(db.Model):
     """ Primary key of the related reservation (see  :py:class:`collectives.models.reservation.Reservation`).
     :type: int"""
 
-    def is_not_full(self):
+    def is_full(self):
         """
-        :return: True if the reservation line is not full
+        :return: True if the reservation line is full
         :rtype: bool"""
-        print(self.equipments)
-        return self.quantity > len(self.equipments)
+        return self.quantity <= len(self.equipments)
+
+    def add_equipment(self, equipment):
+        """
+        :return: True the equipment has been added well
+        :rtype: bool"""
+        if not self.is_full():
+            if equipment.set_status_to_rented():
+                self.equipments.append(equipment)
+                return True
+        return False
+
+    def get_equipments_rented(self):
+        """
+        :return: List of all the equipments Rented
+        :rtype: list[:py:class:`collectives.models.equipment.Equipment]
+        """
+        equipmentsRented = []
+        for equipment in self.equipments:
+            if equipment.is_rented():
+                equipmentsRented.append(equipment)
+        return equipmentsRented
+
+    def get_equipments_returned(self):
+        """
+        :return: List of all the equipments available
+        :rtype: list[:py:class:`collectives.models.equipment.Equipment]
+        """
+        equipmentsAvailable = []
+        for equipment in self.equipments:
+            if equipment.is_available():
+                equipmentsAvailable.append(equipment)
+        return equipmentsAvailable
+
+    def count_equipments_returned(self):
+        """
+        :return: Number of equipments returned
+        :rtype: Int
+        """
+        return len(self.get_equipments_returned())
+
+    def count_equipments(self):
+        """
+        :return: Number of equipments in the reservation
+        :rtype: Int
+        """
+        return len(self.equipments)
+
+    def get_ratio_equipments(self):
+        """
+        :return: Number of equipments in each reservation line
+        :rtype: String
+        """
+        if self.reservation.is_ongoing():
+            return (
+                str(self.count_equipments_returned())
+                + "/"
+                + str(self.count_equipments())
+            )
+        return str(self.count_equipments()) + "/" + str(self.quantity)
 
 
 class Reservation(db.Model):
@@ -162,3 +221,89 @@ class Reservation(db.Model):
 
     :type: list(:py:class:`collectives.models.reservation.ReservationLine`)
     """
+
+    def is_planned(self):
+        """
+        :return: True if the reservation is Planned
+        :rtype: bool"""
+        return self.status == ReservationStatus.Planned
+
+    def is_ongoing(self):
+        """
+        :return: True if the reservation is Ongoing
+        :rtype: bool"""
+        return self.status == ReservationStatus.Ongoing
+
+    def is_completed(self):
+        """
+        :return: True if the reservation is Completed
+        :rtype: bool"""
+        return self.status == ReservationStatus.Completed
+
+    def is_full(self):
+        """
+        :return: True if the reservation is full
+        :rtype: bool"""
+        for reservationLine in self.lines:
+            if not reservationLine.is_full():
+                return False
+        return True
+
+    def count_equipments_returned(self):
+        """
+        :return: Number of equipments returned
+        :rtype: Int
+        """
+        nb_equipments_rendered = 0
+        for reservationLine in self.lines:
+            nb_equipments_rendered += reservationLine.count_equipments_returned()
+        return nb_equipments_rendered
+
+    def count_equipments(self):
+        """
+        :return: Number of equipments in each reservation line
+        :rtype: Int
+        """
+        nb_equipments = 0
+        for reservationLine in self.lines:
+            nb_equipments += reservationLine.count_equipments()
+        return nb_equipments
+
+    def count_total_quantity(self):
+        """
+        :return: total of quantity in each reservation line
+        :rtype: Int
+        """
+        quantity = 0
+        for reservationLine in self.lines:
+            quantity += reservationLine.quantity
+        return quantity
+
+    def get_ratio_equipments(self):
+        """
+        :return: Number of equipments in each reservation line
+        :rtype: String
+        """
+        if self.is_ongoing():
+            return (
+                str(self.count_equipments_returned())
+                + "/"
+                + str(self.count_equipments())
+            )
+        return str(self.count_equipments()) + "/" + str(self.count_total_quantity())
+
+    def can_be_completed(self):
+        """
+        :return: True if the reservation is all the equipments rented are returned
+        :rtype: bool"""
+        return self.count_equipments_returned() == self.count_equipments()
+
+    def get_line_of_type(self, equipemntType):
+        """
+        :return: the line containing the type
+        :rtype: list[:py:class:`collectives.models.reservation.ReservationLine]
+        """
+        for reservationLine in self.lines:
+            if reservationLine.equipmentType == equipemntType:
+                return reservationLine
+        return None

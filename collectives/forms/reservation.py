@@ -24,3 +24,15 @@ class LeaderReservationForm(FlaskForm, ModelForm):
             hour=(datetime.now() + timedelta(hours=1)).hour,
             minute=0,
         )
+
+
+class ReservationToLocationForm(FlaskForm):
+    """Form for deleting an equipment"""
+
+    validate = SubmitField("Valider la réservation")
+
+
+class EndLocationForm(FlaskForm):
+    """Form for deleting an equipment"""
+
+    validate = SubmitField("Valider la retour de la location")
