@@ -167,14 +167,13 @@ def register(event_id, role_id=None):
 
     if form.is_submitted():
         if not form.validate():
-            flash("La réservation est incorrecte")
             return render_template(
                 "reservation/editreservation.html",
                 event=event,
                 role_id=role_id,
                 form=form,
             )
-
+        has_added_equipment = False
         reservation = Reservation()
         for e in EquipmentType.query.all():
             quantity = getattr(form, f"field{e.id}").data
@@ -185,7 +184,15 @@ def register(event_id, role_id=None):
             resa_line.quantity = quantity
             resa_line.equipment_type_id = e.id
             reservation.lines.append(resa_line)
+            has_added_equipment = True
 
+        if not has_added_equipment:
+            return render_template(
+                "reservation/editreservation.html",
+                event=event,
+                role_id=role_id,
+                form=form,
+            )
         reservation.event = event
         reservation.user = current_user
         reservation.collect_date = form.collect_date.data
