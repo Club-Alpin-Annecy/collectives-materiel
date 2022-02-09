@@ -1,5 +1,5 @@
       //initialize table
-      let table = new Tabulator("#equipment-table", {
+      let table = new Tabulator("#reservation-table", {
         ajaxURL:ajaxURL,
         layout:"fitColumns",      //fit columns to width of table
         responsiveLayout:"hide",  //hide columns that dont fit on the table
@@ -13,39 +13,17 @@
         initialSort:[             //set the initial sort order of the data
             {column:"name", dir:"asc"},
         ],
-
         columns:[
           {
-            title:"Référence",
+            title:"Quantité",
             headerFilter:"input",
-            field:"reference"
+            field:"quantity"
           },
           {
             title:"Type d'équipement",
             headerFilter:"input",
-            field:"typeName",
-            formatter:"link",
-            formatterParams:{
-              urlField:"equipmentURL"
-            }
-          },
-          {
-            title:"Supprimer",
-            formatter:"buttonCross",
-            headerSort:false,
-            cellClick:function(e, cell){
-              if(confirm('Voulez-vous vraiment retirer cet équipement de cet réservation ?')) {
-
-                  let id = cell.getRow().getData().id
-
-                  axios.defaults.headers.common['X-CSRF-TOKEN'] = token_csrf;
-                  axios.post('/api/remove_reservationLine_equipment/'+id+'/'+line_id)
-                  .then((response)=>{
-                    window.location.reload()
-                  })
-
-              }
-            }
+            field:"equipmentTypeName",
           },
         ],
+         //create columns from data field names
       });

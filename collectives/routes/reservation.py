@@ -8,14 +8,18 @@ from flask import render_template, redirect, url_for
 from flask import Blueprint, flash
 from wtforms import IntegerField
 from collectives.forms.equipment import AddEquipmentInReservation
-from collectives.models.equipment import Equipment, EquipmentStatus
+from collectives.models.equipment import Equipment
 from collectives.utils.access import valid_user, confidentiality_agreement, user_is
 from collectives.models.equipment import Equipment, EquipmentType
 
 from ..models import db
 from ..models import Event, RoleIds
-from ..models.reservation import Reservation, ReservationLine
-from ..forms.reservation import LeaderReservationForm
+from ..models.reservation import Reservation, ReservationLine, ReservationStatus
+from ..forms.reservation import (
+    EndLocationForm,
+    LeaderReservationForm,
+    ReservationToLocationForm,
+)
 
 blueprint = Blueprint("reservation", __name__, url_prefix="/reservation")
 """ Reservation blueprint
@@ -70,19 +74,73 @@ def view_reservations_returns_of_week():
     )
 
 
-@blueprint.route("/<int:reservation_id>", methods=["GET"])
+@blueprint.route("/<int:reservation_id>", methods=["GET", "POST"])
 def view_reservation(reservation_id=None):
     """
     Shows a reservation
     """
-    reservation = (
-        Reservation()
-        if reservation_id is None
-        else Reservation.query.get(reservation_id)
-    )
+
+    reservation = Reservation.query.get(reservation_id)
+
+    form = None
+    form_add = None
+    if reservation.is_planned():
+        form_add = AddEquipmentInReservation()
+        if form_add.validate_on_submit():
+            equipment = Equipment.query.get(form_add.add_equipment.data)
+            if equipment:
+                reservationLine = reservation.get_line_of_type(
+                    equipment.model.equipmentType
+                )
+                if reservationLine:
+                    reservationLine.add_equipment(equipment)
+                return redirect(
+                    url_for(".view_reservation", reservation_id=reservation_id)
+                )
+        form = ReservationToLocationForm()
+        if form.validate_on_submit():
+            reservation.status = ReservationStatus.Ongoing
+            return redirect(url_for(".view_reservation", reservation_id=reservation_id))
+    elif reservation.is_ongoing():
+        form = EndLocationForm()
+        if form.validate_on_submit():
+            reservation.status = ReservationStatus.Completed
+            return redirect(url_for(".view_reservation", reservation_id=reservation_id))
     return render_template(
         "reservation/reservation.html",
         reservation=reservation,
+        form=form,
+        form_add=form_add,
+    )
+
+
+@blueprint.route("/line/<int:reservationLine_id>", methods=["GET", "POST"])
+def view_reservationLine(reservationLine_id):
+    """
+    Show a reservation line
+    """
+    reservationLine = ReservationLine.query.get(reservationLine_id)
+    if reservationLine.reservation.status == ReservationStatus.Planned:
+        form = AddEquipmentInReservation()
+        if form.validate_on_submit():
+            equipment = Equipment.query.get(form.add_equipment.data)
+            reservationLine.add_equipment(equipment)
+            return redirect(
+                url_for(".view_reservationLine", reservationLine_id=reservationLine_id)
+            )
+        return render_template(
+            "reservation/reservationLine_planned.html",
+            reservationLine=reservationLine,
+            form=form,
+        )
+    if reservationLine.reservation.status == ReservationStatus.Ongoing:
+        return render_template(
+            "reservation/reservationLine_ongoing.html", reservationLine=reservationLine
+        )
+
+    return render_template(
+        "reservation/reservationLine_completed.html",
+        reservationLine=reservationLine,
     )
 
 
@@ -203,20 +261,23 @@ def register(event_id, role_id=None):
     )
 
 
-@blueprint.route("/line/<int:reservationLine_id>", methods=["GET", "POST"])
-def view_reservationLine(reservationLine_id):
+@blueprint.route("/my_reservations", methods=["GET"])
+def my_reservations():
     """
-    Show a reservation line
+    Show all the reservations of user
     """
-    form = AddEquipmentInReservation()
-    reservationLine = ReservationLine.query.get(reservationLine_id)
-    if form.validate_on_submit():
-        equipment = Equipment.query.get(form.add_equipment.data)
-        reservationLine.equipments.append(equipment)
-        equipment.status = EquipmentStatus.Rented
-        return redirect(
-            url_for(".view_reservationLine", reservationLine_id=reservationLine_id)
-        )
     return render_template(
-        "reservation/reservationLine.html", reservationLine=reservationLine, form=form
+        "reservation/user/my_reservations.html",
+    )
+
+
+@blueprint.route("/my_reservation//<int:reservation_id>", methods=["GET", "POST"])
+def my_reservation(reservation_id):
+    """
+    Show the reservations detail of user
+    """
+    reservation = Reservation.query.get(reservation_id)
+
+    return render_template(
+        "reservation/user/my_reservation.html", reservation=reservation
     )

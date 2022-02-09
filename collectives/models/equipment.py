@@ -176,6 +176,10 @@ class EquipmentModel(db.Model):
 
     :type: string"""
 
+    manufacturer = db.Column(db.String(50))
+    """Manufacturer of this equipment.
+    :type: string"""
+
     equipments = db.relationship(
         "Equipment",
         lazy="select",
@@ -222,10 +226,6 @@ class Equipment(db.Model):
 
     :type: float"""
 
-    manufacturer = db.Column(db.String(50))
-    """Manufacturer of this equipment.
-    :type: string"""
-
     serial_number = db.Column(db.String(50))
     """Serial number of this equipment.
     :type: String"""
@@ -252,3 +252,35 @@ class Equipment(db.Model):
         secondary=ReservationLine_Equipment,
         back_populates="equipments",
     )
+
+    def get_reservations(self):
+        """
+        :return: List of all the reservations related to this equipment
+        :rtype: list[:py:class:`collectives.models.reservation.Reservation]
+        """
+        reservations = []
+        for aReservationLine in self.reservationLines:
+            reservations.append(aReservationLine.reservation)
+
+        return reservations
+
+    def is_rented(self):
+        """
+        :return: True if the equipment is rented
+        :rtype: bool"""
+        return self.status == EquipmentStatus.Rented
+
+    def set_status_to_rented(self):
+        """
+        :return: True if the equipment is rented
+        :rtype: bool"""
+        if self.is_available():
+            self.status = EquipmentStatus.Rented
+            return True
+        return False
+
+    def is_available(self):
+        """
+        :return: True if the equipment is Available
+        :rtype: bool"""
+        return self.status == EquipmentStatus.Available
