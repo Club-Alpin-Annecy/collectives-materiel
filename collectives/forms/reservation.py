@@ -1,5 +1,7 @@
+
 from datetime import datetime, timedelta
-from wtforms import SubmitField
+from wtforms import DateField, SubmitField, HiddenField
+
 from flask_wtf.form import FlaskForm
 from wtforms_alchemy import ModelForm
 from ..models.reservation import Reservation
@@ -36,3 +38,22 @@ class EndLocationForm(FlaskForm):
     """Form for deleting an equipment"""
 
     validate = SubmitField("Valider la retour de la location")
+
+
+class AddEquipmentInReservationForm(FlaskForm):
+    """Form to add an equipment in a reservation"""
+
+    add_equipment = HiddenField("Ajouter un equipment")
+
+
+class NewRentalForm(FlaskForm):
+    """Form to create a new rental from no reservation"""
+
+    user = HiddenField("Adhérent")
+    add_equipment = HiddenField("Ajouter un equipment")
+
+
+class CancelRentalForm(FlaskForm):
+    """Form to cancel a new rental from no reservation"""
+
+    cancel = SubmitField("Annuler")
