@@ -7,7 +7,6 @@ from flask_login import current_user
 from flask import render_template, redirect, url_for
 from flask import Blueprint, flash
 from wtforms import IntegerField
-from collectives.forms.equipment import AddEquipmentInReservation
 from collectives.models.equipment import Equipment
 from collectives.models.user import User
 from collectives.utils.access import valid_user, confidentiality_agreement, user_is

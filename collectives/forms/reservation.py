@@ -1,6 +1,5 @@
-
 from datetime import datetime, timedelta
-from wtforms import DateField, SubmitField, HiddenField
+from wtforms import SubmitField, HiddenField
 
 from flask_wtf.form import FlaskForm
 from wtforms_alchemy import ModelForm
