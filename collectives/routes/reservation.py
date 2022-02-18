@@ -206,7 +206,8 @@ def view_reservationLine(reservationLine_id):
 @blueprint.route(
     "event/<int:event_id>/role/<int:role_id>/register", methods=["GET", "POST"]
 )
-def register(event_id, role_id=None):
+@blueprint.route("role/<int:role_id>/register", methods=["GET", "POST"])
+def register(event_id=None, role_id=None):
     """Page for user to create a new reservation.
 
     The displayed form depends on the role_id, a leader can create an reservation without paying
@@ -230,7 +231,6 @@ def register(event_id, role_id=None):
         return redirect(url_for("event.view_event", event_id=event_id))
 
     event = Event.query.get(event_id)
-    # print("\nREQUEST FORM -", request.form)
 
     class F(LeaderReservationForm):
         """Empty class to create fields dynamically"""
