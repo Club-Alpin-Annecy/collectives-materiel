@@ -20,11 +20,12 @@ class LeaderReservationForm(FlaskForm, ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.event = kwargs["obj"]
-        self.collect_date.data = (self.event.start).replace(
-            hour=(datetime.now() + timedelta(hours=1)).hour,
-            minute=0,
-        )
+        if "event" in kwargs and kwargs["event"] is not None:
+            self.event = kwargs["event"]
+            self.collect_date.data = (self.event.start).replace(
+                hour=(datetime.now() + timedelta(hours=1)).hour,
+                minute=0,
+            )
 
 
 class ReservationToLocationForm(FlaskForm):

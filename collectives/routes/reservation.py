@@ -241,7 +241,7 @@ def register(event_id=None, role_id=None):
         field = IntegerField(f"{e.name}", default=0)
         setattr(F, f"field{e.id}", field)
 
-    form = F(obj=event)
+    form = F(event=event)
 
     if form.is_submitted():
         if not form.validate():
