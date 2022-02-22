@@ -6,6 +6,10 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tail.datetime-harx-light.min.css')}}">
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment-with-locales.min.js"></script>
 
+  {# Autocomplete #}
+  <script src="https://unpkg.com/js-autocomplete@1.0.4/auto-complete.min.js"></script>
+  <link href="https://unpkg.com/js-autocomplete@1.0.4/auto-complete.css" rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/utils/autocomplete.js') }}"></script>
 {% endblock %}
 
 {% block header %}
@@ -39,6 +43,14 @@
     enctype="multipart/form-data"
     class="form"
   >
+      {% if role_id == 22 %}
+        <h4 class="heading-4">Infos utilisateur</h4>
+        <div class="controls">
+          <a href="{{ url_for('profile.show_user', user_id=form.user.id) }}">{{ form.user.full_name() }}</a>
+        </div>
+          Changer d'adhérent : <input type="text" id="new-user" placeholder="Nom...">
+          {{ form.has_changed_user(value=0) }}
+      {% endif %}
       <h4 class="heading-4">Date</h4>
       <div class="controls">
         <div class="datetimepicker" id="datetimepickerstart">
@@ -60,7 +72,7 @@
       {% endfor %}
       {{ form.hidden_tag() }}
 
-      {{ form.submit(class="button button-primary") }}
+      {{ form.save(class="button button-primary") }}
     </div>
   </form>
 <script>
@@ -90,5 +102,18 @@
         classNames:"form-tail-datetime default",
     });
   });
+  window.onload = function () {
+    const searchInput = document.getElementById('new-user');
+    setupAutoComplete(
+      searchInput,
+      '{{url_for("api.autocomplete_users")}}',
+      function(item) { return item.full_name; },
+      function(id, val) {
+        document.getElementById('user_id').value = id;
+        document.getElementById('has_changed_user').value = 1;
+        document.getElementById('user_id').form.submit()
+      }
+      )
+  };
 </script>
 {% endblock %}

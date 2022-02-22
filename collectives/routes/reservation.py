@@ -23,6 +23,7 @@ from ..forms.reservation import (
     NewRentalUserForm,
     ReservationToLocationForm,
     AddEquipmentInReservationForm,
+    VolunteerReservationForm,
 )
 
 blueprint = Blueprint("reservation", __name__, url_prefix="/reservation")
@@ -218,6 +219,7 @@ def register(event_id=None, role_id=None):
     :param int role_id: Role that the user wishes to register has.
     :param int event_id: Primary key of the related event.
     """
+    event = Event.query.get(event_id)
     role = RoleIds.get(role_id)
     if role is None:
         flash("Role inexistant", "error")
@@ -227,17 +229,21 @@ def register(event_id=None, role_id=None):
         flash("Role insuffisant", "error")
         return redirect(url_for("event.view_event", event_id=event_id))
 
-    if not role.relates_to_activity():
-        flash("Role non implémenté")
-        return redirect(url_for("event.view_event", event_id=event_id))
-
-    event = Event.query.get(event_id)
-
+    is_volunteer = role == RoleIds.EquipmentVolunteer
+    form_class = VolunteerReservationForm if is_volunteer else LeaderReservationForm
+    # Populating form with reservable equipment
     for e in EquipmentType.query.all():
         field = IntegerField(f"{e.name}", default=0)
-        setattr(LeaderReservationForm, f"field{e.id}", field)
+        setattr(form_class, f"field{e.id}", field)
+    form = form_class(event=event)
 
-    form = LeaderReservationForm(event=event)
+    # We only changed user, no need to validate the whole form
+    if is_volunteer and int(form.has_changed_user.data):
+        return render_template(
+            "reservation/editreservation.html",
+            role_id=role_id,
+            form=form,
+        )
 
     if form.is_submitted():
         if not form.validate():
@@ -282,7 +288,7 @@ def register(event_id=None, role_id=None):
             )
 
         reservation.event = event
-        reservation.user = current_user
+        reservation.user = form.user
         reservation.collect_date = form.collect_date.data
         db.session.add(reservation)
         db.session.commit()
