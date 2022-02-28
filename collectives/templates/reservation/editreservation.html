@@ -19,9 +19,12 @@
 {% block content %}
 <div class="page-content">
   <!-- Logging Windows -->
-  <h1 class="heading-1">Réservation d'encadrant</h1>
-  Ici, vous pouvez réserver autant de matériel que voulu, gratuitement
-
+  <h1 class="heading-1">Réservation</h1>
+  {% if role_id == 22 %}
+    Ici, vous pouvez réserver du matériel pour un adhérent
+  {% elif role_id == 10 %}
+    Ici, vous pouvez réserver autant de matériel que voulu, gratuitement
+  {% endif %}
   {% if form.event %}
       <h4 class="heading-4">Infos evénément</h4>
       Vous souhaitez réserver pour l'événement : <a href="{{ url_for('event.view_event', event_id=form.event.id) }}">{{ form.event.title }}</a>
