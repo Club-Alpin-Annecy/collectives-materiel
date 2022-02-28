@@ -12,6 +12,7 @@ from collectives.models import Registration, RegistrationLevels, RegistrationSta
 
 # pylint: enable=C0301
 from collectives.api import find_users_by_fuzzy_name
+from collectives.models.equipment import EquipmentStatus, EquipmentType
 from collectives.utils.jinja import helpers_processor
 from collectives.utils.time import current_time
 from collectives.models.user import activity_supervisors
@@ -42,6 +43,27 @@ def create_test_activity(name="Ski"):
     return activity
 
 
+def create_test_typeequipment(name="DVA"):
+    equipmenttype = EquipmentType(name=name, reference_prefix="DV", price=5)
+    db.session.add(equipmenttype)
+    db.session.commit()
+    return equipmenttype
+
+
+def create_test_modelequipment(name="Evo 3+",equipment_type_id=1):
+    equipmenttype = EquipmentType(name=name, manufacturer="Decathlon",equipment_type_id=equipment_type_id)
+    db.session.add(equipmenttype)
+    db.session.commit()
+    return equipmenttype
+
+
+def create_test_equipment(reference="01",status=EquipmentStatus.Available,equipment_model_id=1):
+    equipment = EquipmentType(reference=reference, purchaseDate=datetime.now(),purchasePrice=20,serial_number="AAA",status=status,equipment_model_id=equipment_model_id)
+    db.session.add(equipment)
+    db.session.commit()
+    return equipment
+
+
 class ModelTest(flask_testing.TestCase):
     def create_app(self):
 
@@ -69,6 +91,21 @@ def test_create_user():
 def test_create_activity():
     activity = create_test_activity()
     assert activity in db.session
+
+    
+def test_create_test_typeequipment():
+    typeequipment = create_test_typeequipment()
+    assert typeequipment in db.session
+
+
+def test_create_test_modelequipment():
+    modelequipment = create_test_modelequipment()
+    assert modelequipment in db.session
+
+
+def test_create_test_equipment():
+    equipment = create_test_equipment()
+    assert equipment in db.session
 
 
 def make_role(user):
