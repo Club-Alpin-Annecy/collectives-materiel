@@ -166,6 +166,7 @@ class EventForm(ModelForm, FlaskForm):
     update_activity = HiddenField()
     update_leaders = HiddenField()
     save_all = SubmitField("Enregistrer")
+    cancel = SubmitField("Annuler")
 
     multi_activities_mode = BooleanField("Événement multi-activités")
 
