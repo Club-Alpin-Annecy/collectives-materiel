@@ -221,11 +221,16 @@
     {{ form.hidden_tag() }}
     <div class="controls">
       {{ form.save_all(class="button button-primary") }}
-      {{ form.cancel(class="button button-danger") }}
+      {{ form.cancel(class="button button-danger", onclick="javascript:cancelForm()") }}
     </div>
   </form>
 </div>
 <script>
+
+function cancelForm() {
+  if(confirm('Confirmation de l\'annulation ?')) removeRequiredAttributes();
+}
+
 function updateActivity(element)
 {
     document.getElementById('update_activity').value=1;
