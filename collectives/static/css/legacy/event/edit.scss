@@ -6,7 +6,7 @@
 #eventedit form .controls{
     flex-wrap: wrap;
 }
-#eventedit form .controls > *{
+#eventedit form .controls > *:not(.button) {
     margin: 0 0 !important;
 }
 #eventedit label{
@@ -18,8 +18,8 @@
   margin-bottom: 1em;
 }
 #eventedit input[type=submit] {
-	margin: 8px 0;
-	width: 50%;
+  margin: 9px 22px;
+  width: 45%;
 }
 @media screen and (max-width: 1023px) {
     #eventedit form{

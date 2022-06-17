@@ -295,6 +295,10 @@ def manage_event(event_id=None):
 
     current_status = event.status
     form = EventForm(CombinedMultiDict((request.files, request.form)))
+
+    if form.cancel.data:
+        return redirect(url_for("event.index"))
+
     if not form.is_submitted():
         if event_id is None:
             form = EventForm()
